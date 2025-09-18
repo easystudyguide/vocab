@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flippable Flashcard</title>
+    <style>
+        body {
+            background: #f7fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .flashcard-container {
+            perspective: 1200px;
+        }
+        .flashcard {
+            width: 340px;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(.4,2.3,.3,1);
+            cursor: pointer;
+        }
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .flashcard-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            font-weight: 500;
+            color: #343a40;
+            backface-visibility: hidden;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .flashcard-side.back {
+            transform: rotateY(180deg);
+            background: #e3e9f7;
+            color: #204080;
+        }
+        .label {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-size: 0.95rem;
+            color: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-side front">
+                <div class="label">Front</div>
+                <span>What is the root meaning of <b>"bene"</b>?</span>
+            </div>
+            <div class="flashcard-side back">
+                <div class="label">Back</div>
+                <span><b>"Bene"</b> means "good" or "well"<br>e.g., "benefit", "benevolent"</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        const card = document.getElementById('flashcard');
+        card.addEventListener('click', () => {
+            card.classList.toggle('is-flipped');
+        });
+    </script>
+</body>
+</html>
