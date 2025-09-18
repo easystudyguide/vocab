@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcards Study</title>
+    <title>Flashcards</title>
     <style>
         body {
             background: #98FB98;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
         }
+        h1 {
+            margin-top: 2.2rem;
+            margin-bottom: 1.2rem;
+        }
         .flashcard-container {
             perspective: 1200px;
-            margin-top: 2rem;
-            margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1.1rem;
+            min-height: 210px;
         }
         .flashcard {
             width: 340px;
@@ -41,11 +45,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 500;
             color: #343a40;
             backface-visibility: hidden;
-            padding: 1.5rem;
+            padding: 1.4rem;
             text-align: center;
         }
         .flashcard-side.back {
@@ -62,21 +66,22 @@
         }
         .controls {
             display: flex;
-            gap: 1.5rem;
+            gap: 1rem;
             justify-content: center;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.7rem;
         }
         .control-btn {
-            padding: 0.6rem 1.2rem;
-            font-size: 1rem;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.98rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 7px;
             background: #4f8ef7;
             color: white;
             cursor: pointer;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            transition: background 0.2s, transform 0.12s;
+            min-width: 65px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            transition: background 0.2s, transform 0.11s;
         }
         .control-btn:disabled {
             background: #b1c6ee;
@@ -86,11 +91,11 @@
             display: flex;
             gap: 0.5rem;
             justify-content: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.1rem;
         }
         .dot {
-            width: 13px;
-            height: 13px;
+            width: 11px;
+            height: 11px;
             border-radius: 50%;
             background: #c7d1e6;
             border: none;
@@ -99,12 +104,13 @@
         }
         .dot.active {
             background: #4f8ef7;
-            transform: scale(1.16);
+            transform: scale(1.15);
         }
         .quiz-btn {
-            padding: 0.7rem 2rem;
-            font-size: 1.1rem;
-            margin-top: 1rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 1.07rem;
+            margin-top: 0.7rem;
+            margin-bottom: 0.2rem;
             border: none;
             border-radius: 8px;
             background: #ffa726;
@@ -112,20 +118,63 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 1px 4px rgba(0,0,0,0.09);
-            transition: background 0.2s, transform 0.11s;
+            transition: background 0.18s, transform 0.11s;
         }
         .quiz-btn:hover {
             background: #ff9700;
             transform: translateY(-1px) scale(1.03);
         }
+        .mc-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        .mc-choice-btn {
+            min-width: 220px;
+            background: #eef3fd;
+            border: 2px solid #bcc9e7;
+            color: #264080;
+            border-radius: 8px;
+            padding: 0.65rem 0.5rem;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: background 0.15s, border 0.15s;
+        }
+        .mc-choice-btn.correct {
+            background: #c8f7c5;
+            border: 2px solid #2ecc40;
+            color: #176b20;
+        }
+        .mc-choice-btn.incorrect {
+            background: #ffd3d3;
+            border: 2px solid #ff3c36;
+            color: #a72626;
+        }
+        .mc-choice-btn:disabled {
+            opacity: 0.92;
+            cursor: default;
+        }
+        .quiz-feedback {
+            margin-top: 0.9rem;
+            font-size: 1.13rem;
+            font-weight: bold;
+        }
+        .quiz-score {
+            margin-top: 1.2rem;
+            color: #356ac3;
+            font-size: 1.13rem;
+        }
         @media (max-width: 400px) {
             .flashcard { width: 98vw; height: 160px; }
+            .mc-choice-btn { min-width: 90vw; }
         }
     </style>
 </head>
 <body>
     <h1>Vocab Flashcards</h1>
-    <div class="flashcard-container">
+    <div class="flashcard-container" style="margin-top:0;">
         <div class="flashcard" id="flashcard">
             <div class="flashcard-side front">
                 <div class="label">Front</div>
@@ -143,25 +192,53 @@
     </div>
     <div class="dots" id="dots"></div>
     <button class="quiz-btn" id="quiz-btn">Quiz Mode</button>
-    
+    <div id="quiz-mc-area" style="width:100%;"></div>
     <script>
     // Array of flashcards
     const flashcards = [
         {
             front: 'What is the root meaning of <b>"bene"</b>?',
-            back: '<b>"Bene"</b> means "good" or "well"<br>e.g., "benefit", "benevolent"'
+            back: '<b>"Bene"</b> means "good" or "well"<br>e.g., "benefit", "benevolent"',
+            choices: [
+                '"bad" or "evil"',
+                '"good" or "well"',
+                '"see" or "look"',
+                '"write" or "record"'
+            ],
+            answerIndex: 1
         },
         {
             front: 'What does <b>"dict"</b> mean?',
-            back: '<b>"Dict"</b> means "say" or "speak"<br>e.g., "dictate", "dictionary"'
+            back: '<b>"Dict"</b> means "say" or "speak"<br>e.g., "dictate", "dictionary"',
+            choices: [
+                '"carry"',
+                '"write"',
+                '"say" or "speak"',
+                '"life"'
+            ],
+            answerIndex: 2
         },
         {
             front: 'Define <b>"port"</b> as a root word.',
-            back: '<b>"Port"</b> means "carry"<br>e.g., "transport", "portable"'
+            back: '<b>"Port"</b> means "carry"<br>e.g., "transport", "portable"',
+            choices: [
+                '"carry"',
+                '"see"',
+                '"speak"',
+                '"move"'
+            ],
+            answerIndex: 0
         },
         {
             front: 'What does <b>"scrib"</b> or <b>"script"</b> mean?',
-            back: '<b>"Scrib/Script"</b> means "write"<br>e.g., "describe", "manuscript"'
+            back: '<b>"Scrib/Script"</b> means "write"<br>e.g., "describe", "manuscript"',
+            choices: [
+                '"see"',
+                '"write"',
+                '"good"',
+                '"hear"'
+            ],
+            answerIndex: 1
         }
     ];
 
@@ -170,6 +247,7 @@
     let quizMode = false;
     let quizIndexes = [];
     let quizStep = 0;
+    let quizScore = 0;
 
     const flashcard = document.getElementById('flashcard');
     const frontSpan = document.getElementById('flashcard-front');
@@ -178,6 +256,7 @@
     const nextBtn = document.getElementById('next-btn');
     const dotsDiv = document.getElementById('dots');
     const quizBtn = document.getElementById('quiz-btn');
+    const quizMcArea = document.getElementById('quiz-mc-area');
 
     function renderFlashcard(index) {
         isFlipped = false;
@@ -203,6 +282,7 @@
     }
 
     flashcard.addEventListener('click', () => {
+        if (quizMode) return;
         isFlipped = !isFlipped;
         flashcard.classList.toggle('is-flipped', isFlipped);
     });
@@ -233,56 +313,85 @@
     function startQuiz() {
         quizIndexes = shuffle([...Array(flashcards.length).keys()]);
         quizStep = 0;
+        quizScore = 0;
         quizBtn.textContent = "Exit Quiz";
         prevBtn.style.display = "none";
         nextBtn.style.display = "none";
         dotsDiv.style.display = "none";
-        showQuizCard();
+        flashcard.style.display = "none";
+        quizMcArea.style.display = "";
+        showQuizMC();
     }
 
-    function showQuizCard() {
-        isFlipped = false;
-        flashcard.classList.remove('is-flipped');
+    function showQuizMC() {
+        quizMcArea.innerHTML = '';
+        if (quizStep >= quizIndexes.length) {
+            quizMcArea.innerHTML = `<div class="quiz-score">Quiz Complete!<br>Score: ${quizScore} / ${flashcards.length}</div>
+            <button class="quiz-btn" onclick="location.reload()">Restart</button>`;
+            return;
+        }
         const idx = quizIndexes[quizStep];
-        frontSpan.innerHTML = flashcards[idx].front;
-        backSpan.innerHTML = '<span style="color:#aaa;font-size:1.1rem;">Click to reveal answer</span>';
-        // Only go to next after answer is shown
-        flashcard.onclick = () => {
-            if (!isFlipped) {
-                isFlipped = true;
-                flashcard.classList.add('is-flipped');
-                backSpan.innerHTML = flashcards[idx].back + '<br><br><button id="nextQuizBtn" style="margin-top:1rem;padding:0.5rem 1.3rem;border:none;background:#4f8ef7;color:#fff;border-radius:7px;font-size:1rem;cursor:pointer;">Next</button>';
-                document.getElementById('nextQuizBtn').onclick = (e) => {
-                    e.stopPropagation();
-                    quizStep++;
-                    if (quizStep < flashcards.length) {
-                        showQuizCard();
-                    } else {
-                        endQuiz("Quiz completed!");
-                    }
-                };
-            }
-        };
+        const fc = flashcards[idx];
+        // Question text
+        const qDiv = document.createElement('div');
+        qDiv.style.fontSize = "1.18rem";
+        qDiv.style.fontWeight = "bold";
+        qDiv.innerHTML = `Q${quizStep+1}: ${fc.front}`;
+        quizMcArea.appendChild(qDiv);
+
+        // Multiple choices (shuffle for variety)
+        let choices = fc.choices.map((text, i) => ({text, i}));
+        choices = shuffle(choices);
+
+        const mcDiv = document.createElement('div');
+        mcDiv.className = "mc-choices";
+        choices.forEach((choice, btnIdx) => {
+            const btn = document.createElement('button');
+            btn.className = 'mc-choice-btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => {
+                // Disable all buttons
+                Array.from(mcDiv.children).forEach(b => b.disabled = true);
+                // Check correct
+                if (choice.i === fc.answerIndex) {
+                    btn.classList.add('correct');
+                    quizScore++;
+                    showFeedback("Correct! " + fc.back, true);
+                } else {
+                    btn.classList.add('incorrect');
+                    // Highlight correct
+                    Array.from(mcDiv.children).forEach((b, j) => {
+                        if (choices[j].i === fc.answerIndex) b.classList.add('correct');
+                    });
+                    showFeedback("Incorrect. " + fc.back, false);
+                }
+            };
+            mcDiv.appendChild(btn);
+        });
+        quizMcArea.appendChild(mcDiv);
     }
 
-    function endQuiz(msg) {
+    function showFeedback(msg, correct) {
+        let feedback = document.createElement('div');
+        feedback.className = "quiz-feedback";
+        feedback.innerHTML = msg;
+        quizMcArea.appendChild(feedback);
+        setTimeout(() => {
+            quizStep++;
+            showQuizMC();
+        }, 1600);
+    }
+
+    function endQuiz() {
         quizMode = false;
         quizBtn.textContent = "Quiz Mode";
         prevBtn.style.display = "";
         nextBtn.style.display = "";
         dotsDiv.style.display = "";
-        flashcard.onclick = null;
-        flashcard.addEventListener('click', () => {
-            isFlipped = !isFlipped;
-            flashcard.classList.toggle('is-flipped', isFlipped);
-        });
-        if (msg) {
-            frontSpan.innerHTML = msg;
-            backSpan.innerHTML = '';
-            flashcard.classList.remove('is-flipped');
-        } else {
-            renderFlashcard(current);
-        }
+        flashcard.style.display = "";
+        quizMcArea.style.display = "none";
+        quizMcArea.innerHTML = '';
+        renderFlashcard(current);
     }
 
     function shuffle(array) {
@@ -295,6 +404,7 @@
 
     // Initial render
     renderFlashcard(current);
+    quizMcArea.style.display = "none";
     </script>
 </body>
 </html>
