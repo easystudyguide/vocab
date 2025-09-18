@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Flashcards - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7fafc;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            margin-bottom: 2rem;
+            color: #22223b;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4f8ef7;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s, transform 0.15s;
+        }
+        .nav-btn:hover {
+            background: #356ac3;
+            transform: translateY(-2px) scale(1.04);
+        }
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            color: #9a9a9a;
+            font-size: 0.97rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vocab Flashcards</h1>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="location.href='root-words.html'">Root Words</button>
+            <button class="nav-btn" onclick="location.href='words.html'">Words</button>
+        </div>
+    </div>
+    <footer>
+        &copy; 2025 Vocab Flashcards
+    </footer>
+</body>
+</html>
