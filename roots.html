@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flippable Flashcard</title>
+    <title>Flashcards Study</title>
     <style>
         body {
             background: #98FB98;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            min-height: 100vh;
             margin: 0;
+            font-family: Arial, sans-serif;
         }
         .flashcard-container {
             perspective: 1200px;
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
         }
         .flashcard {
             width: 340px;
@@ -37,7 +41,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             font-weight: 500;
             color: #343a40;
             backface-visibility: hidden;
@@ -56,24 +60,241 @@
             font-size: 0.95rem;
             color: #a0a0a0;
         }
+        .controls {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .control-btn {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: #4f8ef7;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            transition: background 0.2s, transform 0.12s;
+        }
+        .control-btn:disabled {
+            background: #b1c6ee;
+            cursor: default;
+        }
+        .dots {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #c7d1e6;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.12s;
+        }
+        .dot.active {
+            background: #4f8ef7;
+            transform: scale(1.16);
+        }
+        .quiz-btn {
+            padding: 0.7rem 2rem;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: #ffa726;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+            transition: background 0.2s, transform 0.11s;
+        }
+        .quiz-btn:hover {
+            background: #ff9700;
+            transform: translateY(-1px) scale(1.03);
+        }
+        @media (max-width: 400px) {
+            .flashcard { width: 98vw; height: 160px; }
+        }
     </style>
 </head>
 <body>
+    <h1>Vocab Flashcards</h1>
     <div class="flashcard-container">
         <div class="flashcard" id="flashcard">
             <div class="flashcard-side front">
-                <span>What is the meaning of <b>"gignoskein"</b>?</span>
+                <div class="label">Front</div>
+                <span id="flashcard-front"></span>
             </div>
             <div class="flashcard-side back">
-                <span>to know<br></span>
+                <div class="label">Back</div>
+                <span id="flashcard-back"></span>
             </div>
         </div>
     </div>
+    <div class="controls">
+        <button class="control-btn" id="prev-btn">Prev</button>
+        <button class="control-btn" id="next-btn">Next</button>
+    </div>
+    <div class="dots" id="dots"></div>
+    <button class="quiz-btn" id="quiz-btn">Quiz Mode</button>
+    
     <script>
-        const card = document.getElementById('flashcard');
-        card.addEventListener('click', () => {
-            card.classList.toggle('is-flipped');
+    // Array of flashcards
+    const flashcards = [
+        {
+            front: 'What is the root meaning of <b>"bene"</b>?',
+            back: '<b>"Bene"</b> means "good" or "well"<br>e.g., "benefit", "benevolent"'
+        },
+        {
+            front: 'What does <b>"dict"</b> mean?',
+            back: '<b>"Dict"</b> means "say" or "speak"<br>e.g., "dictate", "dictionary"'
+        },
+        {
+            front: 'Define <b>"port"</b> as a root word.',
+            back: '<b>"Port"</b> means "carry"<br>e.g., "transport", "portable"'
+        },
+        {
+            front: 'What does <b>"scrib"</b> or <b>"script"</b> mean?',
+            back: '<b>"Scrib/Script"</b> means "write"<br>e.g., "describe", "manuscript"'
+        }
+    ];
+
+    let current = 0;
+    let isFlipped = false;
+    let quizMode = false;
+    let quizIndexes = [];
+    let quizStep = 0;
+
+    const flashcard = document.getElementById('flashcard');
+    const frontSpan = document.getElementById('flashcard-front');
+    const backSpan = document.getElementById('flashcard-back');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const dotsDiv = document.getElementById('dots');
+    const quizBtn = document.getElementById('quiz-btn');
+
+    function renderFlashcard(index) {
+        isFlipped = false;
+        flashcard.classList.remove('is-flipped');
+        frontSpan.innerHTML = flashcards[index].front;
+        backSpan.innerHTML = flashcards[index].back;
+        updateDots(index);
+        prevBtn.disabled = (index === 0);
+        nextBtn.disabled = (index === flashcards.length - 1);
+    }
+
+    function updateDots(index) {
+        dotsDiv.innerHTML = '';
+        for (let i = 0; i < flashcards.length; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'dot' + (i === index ? ' active' : '');
+            dot.addEventListener('click', () => {
+                current = i;
+                renderFlashcard(current);
+            });
+            dotsDiv.appendChild(dot);
+        }
+    }
+
+    flashcard.addEventListener('click', () => {
+        isFlipped = !isFlipped;
+        flashcard.classList.toggle('is-flipped', isFlipped);
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (current > 0) {
+            current--;
+            renderFlashcard(current);
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (current < flashcards.length - 1) {
+            current++;
+            renderFlashcard(current);
+        }
+    });
+
+    quizBtn.addEventListener('click', () => {
+        quizMode = !quizMode;
+        if (quizMode) {
+            startQuiz();
+        } else {
+            endQuiz();
+        }
+    });
+
+    function startQuiz() {
+        quizIndexes = shuffle([...Array(flashcards.length).keys()]);
+        quizStep = 0;
+        quizBtn.textContent = "Exit Quiz";
+        prevBtn.style.display = "none";
+        nextBtn.style.display = "none";
+        dotsDiv.style.display = "none";
+        showQuizCard();
+    }
+
+    function showQuizCard() {
+        isFlipped = false;
+        flashcard.classList.remove('is-flipped');
+        const idx = quizIndexes[quizStep];
+        frontSpan.innerHTML = flashcards[idx].front;
+        backSpan.innerHTML = '<span style="color:#aaa;font-size:1.1rem;">Click to reveal answer</span>';
+        // Only go to next after answer is shown
+        flashcard.onclick = () => {
+            if (!isFlipped) {
+                isFlipped = true;
+                flashcard.classList.add('is-flipped');
+                backSpan.innerHTML = flashcards[idx].back + '<br><br><button id="nextQuizBtn" style="margin-top:1rem;padding:0.5rem 1.3rem;border:none;background:#4f8ef7;color:#fff;border-radius:7px;font-size:1rem;cursor:pointer;">Next</button>';
+                document.getElementById('nextQuizBtn').onclick = (e) => {
+                    e.stopPropagation();
+                    quizStep++;
+                    if (quizStep < flashcards.length) {
+                        showQuizCard();
+                    } else {
+                        endQuiz("Quiz completed!");
+                    }
+                };
+            }
+        };
+    }
+
+    function endQuiz(msg) {
+        quizMode = false;
+        quizBtn.textContent = "Quiz Mode";
+        prevBtn.style.display = "";
+        nextBtn.style.display = "";
+        dotsDiv.style.display = "";
+        flashcard.onclick = null;
+        flashcard.addEventListener('click', () => {
+            isFlipped = !isFlipped;
+            flashcard.classList.toggle('is-flipped', isFlipped);
         });
+        if (msg) {
+            frontSpan.innerHTML = msg;
+            backSpan.innerHTML = '';
+            flashcard.classList.remove('is-flipped');
+        } else {
+            renderFlashcard(current);
+        }
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Initial render
+    renderFlashcard(current);
     </script>
 </body>
 </html>
